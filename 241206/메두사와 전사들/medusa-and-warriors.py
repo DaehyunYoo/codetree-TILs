@@ -1,270 +1,223 @@
 import sys
 from collections import deque
-input = sys.stdin.readline
+from typing import List, Tuple
 
-# 마을의 크기(N)와 전사의 수(M)
-N, M = map(int, input().split())
+# 전역 상수 정의
+INF = int(1e9) + 10  # 무한대를 나타내는 상수
+DX = [-1, 1, 0, 0]  # 방향 배열: 위, 아래, 왼쪽, 오른쪽
+DY = [0, 0, -1, 1]
 
-# 메두사의 집 위치(sr, sc)와 공원 위치(er, ec)
-sr, sc, er, ec = map(int, input().split())
+def compute_distances(start_x: int, start_y: int, N: int, obstacle_grid: List[List[int]]) -> List[List[int]]:
+    """BFS를 이용하여 종료 지점에서 모든 도달 가능한 셀까지의 최단 거리를 계산하는 함수"""
+    distance_grid = [[INF if obstacle_grid[i][j] else -1 for j in range(N)] for i in range(N)]
+    queue = deque()
+    queue.append((start_x, start_y))
+    distance_grid[start_x][start_y] = 0
 
-# M명의 전사들의 좌표
-warriors = []
-if M > 0:  # 전사가 있는 경우에만 입력 받기
-    warrior_positions = list(map(int, input().split()))
-    for i in range(0, len(warrior_positions), 2):
-        warriors.append((warrior_positions[i], warrior_positions[i+1]))
+    while queue:
+        current_x, current_y = queue.popleft()
+        for dir in range(4):
+            next_x = current_x + DX[dir]
+            next_y = current_y + DY[dir]
+            if next_x < 0 or next_y < 0 or next_x >= N or next_y >= N:
+                continue
+            if distance_grid[next_x][next_y] != -1:
+                continue
+            distance_grid[next_x][next_y] = distance_grid[current_x][current_y] + 1
+            queue.append((next_x, next_y))
+    
+    return distance_grid
 
-# N x N 크기의 마을 도로 정보
-road = [list(map(int, input().split())) for _ in range(N)]
+# 입력 처리
+input = sys.stdin.read
+data = input().split()
+idx = 0
 
-# 방향 정의
-dx = [-1, 1, 0, 0]
-dy = [0, 0, -1, 1]
+N = int(data[idx]); idx += 1  # 그리드 크기
+M = int(data[idx]); idx += 1  # 전사 수
 
-# 1. 공원에서 출발하는 BFS로 모든 지점까지의 최단 거리 계산
-# 메두사는 이 정보를 이용해 매 턴 공원으로 가는 최단 경로를 따라간다.
-dist_to_park = [[-1]*N for _ in range(N)]
-queue = deque()
-if road[er][ec] == 0:
-    dist_to_park[er][ec] = 0
-    queue.append((er, ec))
+start_x = int(data[idx]); idx += 1
+start_y = int(data[idx]); idx += 1
+end_x = int(data[idx]); idx += 1
+end_y = int(data[idx]); idx += 1
 
-while queue:
-    x, y = queue.popleft()
-    for i in range(4):
-        nx = x + dx[i]
-        ny = y + dy[i]
-        if 0 <= nx < N and 0 <= ny < N and road[nx][ny] == 0 and dist_to_park[nx][ny] == -1:
-            dist_to_park[nx][ny] = dist_to_park[x][y] + 1
-            queue.append((nx, ny))
+# 초기 전사 위치 입력
+warrior_positions = []
+for _ in range(M):
+    x = int(data[idx]); idx += 1
+    y = int(data[idx]); idx += 1
+    warrior_positions.append([x, y])  # 튜플 대신 리스트 사용
 
-# 만약 메두사의 초기 위치에서 공원까지 갈 수 없다면, 바로 종료
-if dist_to_park[sr][sc] == -1:
-    print(-1)
-    sys.exit(0)
+# 장애물 그리드 입력
+obstacle_grid = []
+for _ in range(N):
+    row = []
+    for _ in range(N):
+        cell = int(data[idx]); idx += 1
+        row.append(cell)
+    obstacle_grid.append(row)
 
-medusa_x, medusa_y = sr, sc
+# 시작/종료 지점 장애물 체크
+assert obstacle_grid[start_x][start_y] == 0, "시작 지점에 장애물이 있습니다."
+assert obstacle_grid[end_x][end_y] == 0, "종료 지점에 장애물이 있습니다."
 
-def manhatten_distance(x1, y1, x2, y2):
-    return abs(x1 - x2) + abs(y1 - y2)
+# 거리 그리드 계산
+distance_grid = compute_distances(end_x, end_y, N, obstacle_grid)
 
-# 시야 범위 계산을 개선: 방향별로 삼각형 형태를 효율적으로 탐색
-# 동시에 warrior에 의한 가림 처리도 여기서 수행
-def get_sight_and_blocked(medusa_x, medusa_y, warriors):
-    # warriors를 집합으로 관리하여 빠른 조회
-    warrior_set = set(warriors)
+# 도달 불가능 체크
+if distance_grid[start_x][start_y] == -1:
+    print("-1")
+    sys.exit()
 
-    # direction별 시야 계산 로직
-    # 상(0): 위쪽으로 i칸 이동 시 y축 범위: medusa_y - i ~ medusa_y + i
-    # 하(1): 아래쪽
-    # 좌(2): 왼쪽
-    # 우(3): 오른쪽
+current_x, current_y = start_x, start_y
+sight_map = [[0 for _ in range(N)] for _ in range(N)]
+warrior_count_grid = [[0 for _ in range(N)] for _ in range(N)]
 
-    def sight_in_direction(direction):
-        visible = set()
-        # direction에 따라 medusa_x, medusa_y에서부터 확장
-        if direction == 0:  # 상
-            for d in range(1, medusa_x+1):
-                row = medusa_x - d
-                start_col = medusa_y - d
-                end_col = medusa_y + d
-                if start_col < 0: start_col = 0
-                if end_col >= N: end_col = N-1
+# 초기 전사 수 그리드 설정
+for pos in warrior_positions:
+    if pos[0] != -1:  # 잡히지 않은 전사만 카운트
+        warrior_count_grid[pos[0]][pos[1]] += 1
 
-                line_blocked = False
-                for col in range(start_col, end_col+1):
-                    if road[row][col] == 0:
-                        visible.add((row, col))
-                        if (row, col) in warrior_set:
-                            # 전사를 만났으므로 이 라인 뒤는 가려짐, 다음 칸부터 안 봄
-                            line_blocked = True
-                    # 전사를 만난 이후는 추가하지 않음
-                if line_blocked:
-                    # 한 줄에서 전사 만났으면 그 뒤로 계속 진행 (위쪽 방향) 가능하지만
-                    # 전사는 한 줄에서만 가림. 다른 줄은 계속 볼 수 있음.
-                    pass
-
-        elif direction == 1:  # 하
-            for d in range(1, N - medusa_x):
-                row = medusa_x + d
-                start_col = medusa_y - d
-                end_col = medusa_y + d
-                if start_col < 0: start_col = 0
-                if end_col >= N: end_col = N-1
-
-                line_blocked = False
-                for col in range(start_col, end_col+1):
-                    if road[row][col] == 0:
-                        visible.add((row, col))
-                        if (row, col) in warrior_set:
-                            line_blocked = True
-                if line_blocked:
-                    pass
-
-        elif direction == 2:  # 좌
-            for d in range(1, medusa_y+1):
-                col = medusa_y - d
-                start_row = medusa_x - d
-                end_row = medusa_x + d
-                if start_row < 0: start_row = 0
-                if end_row >= N: end_row = N-1
-
-                line_blocked = False
-                for row in range(start_row, end_row+1):
-                    if road[row][col] == 0:
-                        visible.add((row, col))
-                        if (row, col) in warrior_set:
-                            line_blocked = True
-                if line_blocked:
-                    pass
-
-        else:  # 우(3)
-            for d in range(1, N - medusa_y):
-                col = medusa_y + d
-                start_row = medusa_x - d
-                end_row = medusa_x + d
-                if start_row < 0: start_row = 0
-                if end_row >= N: end_row = N-1
-
-                line_blocked = False
-                for row in range(start_row, end_row+1):
-                    if road[row][col] == 0:
-                        visible.add((row, col))
-                        if (row, col) in warrior_set:
-                            line_blocked = True
-                if line_blocked:
-                    pass
-
-        return visible
-
-    max_warriors = -1
-    best_dir = 0
-    best_sight = set()
-
-    # 각 방향에 대해 전사 수를 계산
-    for direction in range(4):
-        sight = sight_in_direction(direction)
-        # sight 내에 있는 전사 수
-        visible_warriors = sum(1 for w in warriors if w in sight)
-        if visible_warriors > max_warriors:
-            max_warriors = visible_warriors
-            best_dir = direction
-            best_sight = sight
-
-    return best_dir, best_sight
-
-def move_warriors(medusa_x, medusa_y, warriors, sight):
-    dxx = [-1, 1, 0, 0]
-    dyy = [0, 0, -1, 1]
-    new_positions = []
-    total_distance = 0
-
-    # 시야 내 전사들은 움직이지 않음
-    in_sight = set(w for w in warriors if w in sight)
-
-    for wx, wy in warriors:
-        if (wx, wy) in in_sight:
-            new_positions.append((wx, wy))
-            continue
-
-        # 첫 번째 이동
-        min_dist = manhatten_distance(wx, wy, medusa_x, medusa_y)
-        best_pos = (wx, wy)
-        for i in range(4):
-            nx = wx + dxx[i]
-            ny = wy + dyy[i]
-            if 0 <= nx < N and 0 <= ny < N and road[nx][ny] == 0:
-                if (nx, ny) not in sight:
-                    new_dist = manhatten_distance(nx, ny, medusa_x, medusa_y)
-                    if new_dist < min_dist:
-                        min_dist = new_dist
-                        best_pos = (nx, ny)
-        if best_pos != (wx, wy):
-            total_distance += 1
-
-        # 두 번째 이동
-        wx2, wy2 = best_pos
-        min_dist = manhatten_distance(wx2, wy2, medusa_x, medusa_y)
-        second_pos = best_pos
-        # 반대 방향 이동 시도 (메두사와의 거리 더 줄이는 방향)
-        for i in range(4):
-            nx = wx2 + dxx[i]
-            ny = wy2 + dyy[i]
-            if 0 <= nx < N and 0 <= ny < N and road[nx][ny] == 0:
-                if (nx, ny) not in sight:
-                    new_dist = manhatten_distance(nx, ny, medusa_x, medusa_y)
-                    if new_dist < min_dist:
-                        min_dist = new_dist
-                        second_pos = (nx, ny)
-        if second_pos != best_pos:
-            total_distance += 1
-
-        new_positions.append(second_pos)
-
-    return new_positions, total_distance
-
-def check_warrior_attack(medusa_x, medusa_y, warriors):
-    attack_count = 0
-    survived_warriors = []
-    for wx, wy in warriors:
-        if wx == medusa_x and wy == medusa_y:
-            attack_count += 1
-        else:
-            survived_warriors.append((wx, wy))
-    return attack_count, survived_warriors
-
-def simulate_turn():
-    global medusa_x, medusa_y, warriors
-
-    # 메두사 이동 (사전 계산한 dist_to_park 사용)
-    current_dist = dist_to_park[medusa_x][medusa_y]
-    if current_dist == 0:  # 이미 공원 도착
-        print(0)
-        return 1
-
-    # 다음 위치를 dist_to_park를 참조하여 한 칸 이동
+# 메인 게임 루프
+while True:
     moved = False
-    for i in range(4):
-        nx = medusa_x + dx[i]
-        ny = medusa_y + dy[i]
-        if 0 <= nx < N and 0 <= ny < N and dist_to_park[nx][ny] == current_dist - 1:
-            medusa_x, medusa_y = nx, ny
+
+    # 플레이어 이동
+    for dir in range(4):
+        next_x = current_x + DX[dir]
+        next_y = current_y + DY[dir]
+        if next_x < 0 or next_y < 0 or next_x >= N or next_y >= N:
+            continue
+        if distance_grid[next_x][next_y] < distance_grid[current_x][current_y]:
+            current_x, current_y = next_x, next_y
             moved = True
             break
 
-    if not moved:
-        # 이동할 수 없음 -> -1 출력하고 종료
-        print(-1)
-        return 1
+    # 종료 조건 체크
+    if current_x == end_x and current_y == end_y:
+        print("0")
+        break
 
-    # 공원 도착 체크
-    if medusa_x == er and medusa_y == ec:
-        print(0)
-        return 1
+    # 현재 위치의 전사 제거
+    for i in range(M):
+        if warrior_positions[i][0] == current_x and warrior_positions[i][1] == current_y:
+            warrior_positions[i] = [-1, -1]
 
-    # 2. 메두사의 시선 및 전사 확인
-    best_dir, sight = get_sight_and_blocked(medusa_x, medusa_y, warriors)
+    # 전사 수 그리드 업데이트
+    warrior_count_grid = [[0 for _ in range(N)] for _ in range(N)]
+    for pos in warrior_positions:
+        if pos[0] != -1:
+            warrior_count_grid[pos[0]][pos[1]] += 1
 
-    # 돌이 된 전사 계산
-    stone_count = sum(1 for w in warriors if w in sight)
-    active_warriors = [(wx, wy) for wx, wy in warriors if (wx, wy) not in sight]
+    # 시야 맵 초기화
+    sight_map = [[0 for _ in range(N)] for _ in range(N)]
+    
+    # 최적의 시야 방향 선택
+    max_coverage = -1
+    best_direction = -1
+    
+    # 각 방향에 대한 시야 테스트
+    for test_dir in range(4):
+        test_sight_map = [[0 for _ in range(N)] for _ in range(N)]
+        coverage = 0
+        
+        if test_dir == 0:  # 위쪽
+            for i in range(current_x - 1, -1, -1):
+                left = max(0, current_y - (current_x - i))
+                right = min(N - 1, current_y + (current_x - i))
+                for j in range(left, right + 1):
+                    test_sight_map[i][j] = 1
+                    coverage += warrior_count_grid[i][j]
+                
+        elif test_dir == 1:  # 아래쪽
+            for i in range(current_x + 1, N):
+                left = max(0, current_y - (i - current_x))
+                right = min(N - 1, current_y + (i - current_x))
+                for j in range(left, right + 1):
+                    test_sight_map[i][j] = 1
+                    coverage += warrior_count_grid[i][j]
+                    
+        elif test_dir == 2:  # 왼쪽
+            for j in range(current_y - 1, -1, -1):
+                top = max(0, current_x - (current_y - j))
+                bottom = min(N - 1, current_x + (current_y - j))
+                for i in range(top, bottom + 1):
+                    test_sight_map[i][j] = 1
+                    coverage += warrior_count_grid[i][j]
+                    
+        else:  # 오른쪽
+            for j in range(current_y + 1, N):
+                top = max(0, current_x - (j - current_y))
+                bottom = min(N - 1, current_x + (j - current_y))
+                for i in range(top, bottom + 1):
+                    test_sight_map[i][j] = 1
+                    coverage += warrior_count_grid[i][j]
+        
+        if coverage > max_coverage:
+            max_coverage = coverage
+            best_direction = test_dir
+            sight_map = [row[:] for row in test_sight_map]
 
-    # 3. 전사들의 이동
-    new_positions, move_distance = move_warriors(medusa_x, medusa_y, active_warriors, sight)
+    # 전사 이동 및 충돌 처리
+    warriors_moved = 0
+    warriors_hit = 0
+    
+    for i in range(M):
+        if warrior_positions[i][0] == -1:
+            continue
+            
+        warrior_x, warrior_y = warrior_positions[i]
+        if sight_map[warrior_x][warrior_y]:
+            continue
 
-    # 4. 전사들의 공격
-    attack_count, survived_warriors = check_warrior_attack(medusa_x, medusa_y, new_positions)
+        current_distance = abs(current_x - warrior_x) + abs(current_y - warrior_y)
+        has_moved = False
+
+        # 첫 번째 이동
+        for dir in range(4):
+            next_x = warrior_x + DX[dir]
+            next_y = warrior_y + DY[dir]
+            
+            if next_x < 0 or next_y < 0 or next_x >= N or next_y >= N:
+                continue
+            if sight_map[next_x][next_y]:
+                continue
+                
+            new_distance = abs(current_x - next_x) + abs(current_y - next_y)
+            if new_distance < current_distance:
+                warrior_x, warrior_y = next_x, next_y
+                has_moved = True
+                warriors_moved += 1
+                break
+
+        # 두 번째 이동
+        if has_moved:
+            new_distance = abs(current_x - warrior_x) + abs(current_y - warrior_y)
+            for dir in range(4):
+                opposite_dir = (dir + 2) % 4
+                next_x = warrior_x + DX[opposite_dir]
+                next_y = warrior_y + DY[opposite_dir]
+                
+                if next_x < 0 or next_y < 0 or next_x >= N or next_y >= N:
+                    continue
+                if sight_map[next_x][next_y]:
+                    continue
+                    
+                further_distance = abs(current_x - next_x) + abs(current_y - next_y)
+                if further_distance < new_distance:
+                    warrior_x, warrior_y = next_x, next_y
+                    warriors_moved += 1
+                    break
+
+        warrior_positions[i] = [warrior_x, warrior_y]
+
+    # 플레이어와 충돌한 전사 처리
+    for i in range(M):
+        if warrior_positions[i][0] == -1:
+            continue
+        if warrior_positions[i][0] == current_x and warrior_positions[i][1] == current_y:
+            warriors_hit += 1
+            warrior_positions[i] = [-1, -1]
 
     # 결과 출력
-    print(move_distance, stone_count, attack_count)
-
-    # 전사 목록 업데이트
-    warriors = survived_warriors
-
-    return 0
-
-while True:
-    result = simulate_turn()
-    if result != 0:
-        break
+    print(f"{warriors_moved} {max_coverage} {warriors_hit}")
