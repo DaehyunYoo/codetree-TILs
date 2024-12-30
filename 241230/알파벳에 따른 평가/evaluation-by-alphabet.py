@@ -1,14 +1,14 @@
 word = input()
 
-if word == 'S':
+if str(word) == 'S':
     print('Superior')
-elif word == 'A':
+elif str(word) == 'A':
     print('Excellent')
-elif word == 'B':
+elif str(word) == 'B':
     print('Good')
-elif word == 'C':
+elif str(word) == 'C':
     print('Usually')
-elif word == 'D'
+elif str(word) == 'D':
     print('Effort')
 else:
     print('Failure')
