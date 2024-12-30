@@ -1,11 +1,17 @@
-mid_score, final_score = map(int, input().split())
+# A 학생의 수학, 영어 점수 입력 받기
+math_a, eng_a = map(int, input().split())
 
-scholarship = 0
+# B 학생의 수학, 영어 점수 입력 받기
+math_b, eng_b = map(int, input().split())
 
-if mid_score >= 90:
-    if final_score >= 95:
-        scholarship = 100000
-    elif final_score >= 90:
-        scholarship = 50000
-
-print(scholarship)
+# 수학 점수 우선 비교
+if math_a > math_b:
+    print("A")
+elif math_b > math_a:
+    print("B")
+# 수학 점수가 같은 경우 영어 점수 비교
+else:
+    if eng_a > eng_b:
+        print("A")
+    else:
+        print("B")
