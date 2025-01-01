@@ -1,18 +1,15 @@
 n = int(input())
 
 for i in range(n):
-    line = ""
-    for j in range(n - i - 1):
-        line += " "
-    for j in range(i + 1):
-        line += "* " if j % 2 == 0 else "  "
-    print(line.rstrip())
+    print(' ' * (n-i-1), end="")
 
-# 다이아몬드 아랫부분
-for i in range(n - 1):
-    line = ""
-    for j in range(i + 1):
-        line += " "
-    for j in range(n - i - 1):
-        line += "* " if j % 2 == 0 else "  "
-    print(line.rstrip())
+    for j in range(i+1):
+        print('*', end=" ")
+    print()
+
+for i in range(n-1):
+    print(' '* (i + 1), end="")
+    
+    for j in range(n-i-1):
+        print('*', end=" ")
+    print()
