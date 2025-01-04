@@ -7,8 +7,9 @@ for num in numbers:
         break
     result.append(num)
 
+
 # 합계와 평균 계산
 total = sum(result)
 average = total / len(result)
 
-print(total, average)
+print(total, {average:.1f})
