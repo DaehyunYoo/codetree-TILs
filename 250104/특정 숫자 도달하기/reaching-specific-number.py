@@ -12,4 +12,4 @@ for num in numbers:
 total = sum(result)
 average = total / len(result)
 
-print(total, {average:.1f})
+print(f"{total} {average:.1f}")
