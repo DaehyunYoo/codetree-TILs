@@ -7,6 +7,6 @@ for i in nums:
         # print(int(i[0]))
         cnt[int(i[0]) - 1] += 1
 
-for i in range(len(cnt)-1):
-    print(f'{i+1} - {cnt[i]}')
+for i in range(1, 10):
+    print(f'{i} - {cnt[i-1]}')
 
