@@ -12,12 +12,20 @@ def season(x):
     else:
         return False
 
-def is_month(x):
-    if x % 4 == 0 and x % 100 == 0 and x % 400 == 0:
+# def is_month(x):
+#     if x % 4 == 0 and x % 100 == 0 and x % 400 == 0:
+#         return True
+#     if x % 4 == 0 and not x % 100 == 0:
+#         return True
+#     if x % 4 == 0:
+#         return True
+#     return False
+def is_leap_year(y):
+    if y % 400 == 0:
         return True
-    if x % 4 == 0 and not x % 100 == 0:
-        return True
-    if x % 4 == 0:
+    if y % 100 == 0:
+        return False
+    if y % 4 == 0:
         return True
     return False
 
@@ -27,7 +35,7 @@ def check_date(x, y, z):
     
     days_in_month = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
-    if is_month(x):
+    if is_leap_year(x):
         days_in_month[2] = 29
     
     if z > days_in_month[y]:
