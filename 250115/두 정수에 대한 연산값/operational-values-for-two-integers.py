@@ -1,6 +1,9 @@
 a, b = map(int, input().split())
 
 def cal(x, y):
-    print(min(x, y) * 2, max(x, y) + 25)
+    small = min(x, y) * 2
+    larger = max(x, y) + 25
+    return small, larger
 
-cal(a, b)
+result = cal(a, b)
+print(*result)
