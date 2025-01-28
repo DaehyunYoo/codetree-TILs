@@ -11,6 +11,7 @@ for _ in range(n):
     date, day, weather = input().split()
     cnt.append(result(date, day, weather))
 
+cnt.sort(key=lambda x: x.date)
 
 for i in range(n):
     if cnt[i].weather == 'Rain':
