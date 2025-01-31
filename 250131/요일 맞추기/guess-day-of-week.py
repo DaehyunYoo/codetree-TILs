@@ -13,7 +13,7 @@ while True:
         break
 
     if (m1 == m2 and d1 > d2) or (m1 > m2):
-        resvese = True
+        reverse = True
         if d1 == 1:
             days += 1
             d1 = month_days[m1-1]
@@ -33,6 +33,6 @@ while True:
 result = days % 7
 
 if reverse:
-    print(day_of_week[result])
-else:
     print(day_of_week[-result + 7])
+else:
+    print(day_of_week[result])
