@@ -1,18 +1,26 @@
 N = int(input())
-arr = [[0 for _ in range(101)] for _ in range(101)]  # 좌표 범위에 맞게 조정
+# 좌표값을 저장할 때 더 큰 범위의 배열 사용
+MIN_COORD = -100  # 음수 좌표를 고려한 최소값
+MAX_COORD = 100   # 양수 좌표를 고려한 최대값
+SIZE = MAX_COORD - MIN_COORD + 1
 
-# 직사각형 표시
+arr = [[0 for _ in range(SIZE)] for _ in range(SIZE)]
+
 for _ in range(N):
     x1, y1, x2, y2 = map(int, input().split())
-    # 주의: x는 행을, y는 열을 나타내도록 수정
-    for i in range(x1, x2):  # x2는 포함하지 않음
-        for j in range(y1, y2):  # y2는 포함하지 않음
+    # 좌표를 배열 인덱스로 변환
+    x1 = x1 - MIN_COORD
+    y1 = y1 - MIN_COORD
+    x2 = x2 - MIN_COORD
+    y2 = y2 - MIN_COORD
+    
+    for i in range(x1, x2):
+        for j in range(y1, y2):
             arr[i][j] = 1
 
-# 면적 계산
 area = 0
-for i in range(101):
-    for j in range(101):
+for i in range(SIZE):
+    for j in range(SIZE):
         if arr[i][j] == 1:
             area += 1
 
