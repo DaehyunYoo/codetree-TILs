@@ -1,9 +1,12 @@
+import sys
+input = sys.stdin.readline
+
 N = int(input())
 line = [0] * 2001  # Array to store tile colors: -1 for white, 1 for black, 0 for gray
 position = 1000    # Start from middle to allow left/right movement
 
 for _ in range(N):
-    x, direction = input().split()
+    x, direction = input().strip().split()  # Added strip() to remove whitespace
     x = int(x)
     
     if direction == 'L':
