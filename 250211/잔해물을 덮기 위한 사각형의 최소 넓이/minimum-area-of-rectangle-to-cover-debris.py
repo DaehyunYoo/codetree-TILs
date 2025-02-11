@@ -1,8 +1,12 @@
 a_x1, a_y1, a_x2, a_y2 = map(int, input().split())
 b_x1, b_y1, b_x2, b_y2 = map(int, input().split())
 
+# 두 번째 직사각형이 첫 번째 직사각형을 완전히 포함하는 경우
+if b_x1 <= a_x1 and b_x2 >= a_x2 and b_y1 <= a_y1 and b_y2 >= a_y2:
+    result = 0
+
 # 겹치는 구간이 없을 때
-if b_y2 < a_y1 or b_x2 < a_x1 or b_x1 > a_x2 or b_y1 > a_y2:
+elif b_y2 < a_y1 or b_x2 < a_x1 or b_x1 > a_x2 or b_y1 > a_y2:
     result = abs(a_x2 - a_x1) * abs(a_y2 - a_y1)
 
 else:
