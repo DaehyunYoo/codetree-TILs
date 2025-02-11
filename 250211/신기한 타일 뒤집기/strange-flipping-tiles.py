@@ -1,27 +1,28 @@
-import sys
-input = sys.stdin.readline
-
 N = int(input())
-line = [0] * 2001  # Array to store tile colors: -1 for white, 1 for black, 0 for gray
-position = 1000    # Start from middle to allow left/right movement
+tiles = set()  # Store colored tile positions
+white = set()  # Store white tile positions
+black = set()  # Store black tile positions
+curr = 0       # Current position
 
 for _ in range(N):
-    x, direction = input().strip().split()  # Added strip() to remove whitespace
+    x, direction = input().split()
     x = int(x)
     
     if direction == 'L':
-        # Move left and color tiles white
-        for i in range(x):
-            position -= 1
-            line[position] = -1
+        # Color x tiles to the left
+        for i in range(1, x + 1):
+            pos = curr - i
+            tiles.add(pos)
+            white.add(pos)
+            if pos in black:
+                black.remove(pos)
     else:  # direction == 'R'
-        # Move right and color tiles black
+        # Color x tiles to the right
         for i in range(x):
-            line[position] = 1
-            position += 1
+            tiles.add(curr)
+            black.add(curr)
+            if curr in white:
+                white.remove(curr)
+            curr += 1
 
-# Count white (-1) and black (1) tiles
-white_count = line.count(-1)
-black_count = line.count(1)
-
-print(white_count, black_count)
+print(len(white), len(black))
