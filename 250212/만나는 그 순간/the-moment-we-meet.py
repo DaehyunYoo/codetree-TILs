@@ -1,6 +1,6 @@
 N, M = map(int, input().split())
 
-pos_a, pos_b = [0] * 1001, [0] * 1001 
+pos_a, pos_b = [0] * 100001, [0] * 100001 
 time_a, time_b = 1, 1
 
 for _ in range(N):
