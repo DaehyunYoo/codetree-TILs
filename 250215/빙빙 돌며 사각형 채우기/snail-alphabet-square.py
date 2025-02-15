@@ -14,7 +14,11 @@ for i in range(2, N*M+1):
     if nx >= M or nx < 0 or ny < 0 or ny >= N or graph[ny][nx] != 0:
         move_dir = (move_dir + 1) % 4
         nx, ny = x + dxs[move_dir], y + dys[move_dir]
-    new_alpha = chr(ord(new_alpha) + 1)
+    
+    if new_alpha == 'Z':
+        new_alpha = 'A'
+    else:
+        new_alpha = chr(ord(new_alpha) + 1)
     graph[ny][nx] = new_alpha
     x, y = nx, ny
 
