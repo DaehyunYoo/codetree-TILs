@@ -1,5 +1,5 @@
 N, K = map(int, input().split())
-photos = [0] * 100
+photos = [0] * 10001
 
 for _ in range(N):
     nums, alpha = input().split()
