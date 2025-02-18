@@ -1,25 +1,28 @@
-# 입력 받기
 N, K = map(int, input().split())
-# 좌표가 음수일 수 있으므로, 딕셔너리 사용
-candies = {}
+baskets = []
 
-# 사탕 정보 입력받기
-min_pos = float('inf')
-max_pos = float('-inf')
+# 입력 받기
 for _ in range(N):
-    cnt, pos = map(int, input().split())
-    candies[pos] = cnt
-    min_pos = min(min_pos, pos)
-    max_pos = max(max_pos, pos)
+    candy, pos = map(int, input().split())
+    baskets.append((pos, candy))
 
-max_sweets = 0
-# 가능한 모든 중심점에 대해 검사
-for c in range(min_pos, max_pos + 1):
-    # 현재 중심점에서 구간 [c-K, c+K] 내의 사탕 개수 계산
-    current_sweets = 0
-    for pos in candies:
-        if c - K <= pos <= c + K:
-            current_sweets += candies[pos]
-    max_sweets = max(max_sweets, current_sweets)
+# 위치 기준으로 정렬
+baskets.sort()
 
-print(max_sweets)
+max_candies = 0
+left = 0
+right = 0
+total_length = len(baskets)
+
+# 왼쪽 바구니부터 시작
+for left in range(total_length):
+    # 현재 구간의 사탕 합계
+    current_sum = 0
+    # 오른쪽 바구니는 범위를 벗어나지 않을 때까지 이동
+    right = left
+    while right < total_length and baskets[right][0] - baskets[left][0] <= 2*K:
+        current_sum += baskets[right][1]
+        right += 1
+    max_candies = max(max_candies, current_sum)
+
+print(max_candies)
