@@ -9,7 +9,7 @@ for _ in range(N):
         photos[int(nums) - 1] = 2
 
 answer = 0
-for i in range(N-K+1):
+for i in range(len(photos)-K+1):
     max_sum = 0
     for j in range(i, i+K+1):
         max_sum += photos[j]
