@@ -12,7 +12,9 @@ for i in range(len(nums)):
                     if team1 != team2 != team3:
                         teams = [team1, team2, team3]
                         total = max(teams) - min(teams)
-
                         answer = min(answer, total)
 
-print(answer)
+if answer == 10**4:
+    print(-1)
+else:
+    print(answer)
